@@ -1,0 +1,14 @@
+#include <stdio.h>
+#include <cuda_runtime.h>
+
+int main(int argc, char ** argv) {
+    size_t available, total;
+    cudaError_t err = cudaMemGetInfo(&available, &total);
+    if (err == cudaErrorMemoryAllocation) {
+        printf("cudaErrorMemoryAllocation\n");
+    } else {
+        printf("OK or not memory allocation error\n");
+    }
+    printf("%ld %ld\n", available, total);
+    return 0;
+}

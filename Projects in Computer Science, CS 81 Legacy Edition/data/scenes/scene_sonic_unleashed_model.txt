@@ -1,0 +1,22 @@
+camera:
+position 0 0 3
+orientation 0 1 0 0
+near 0.1
+far 50
+left -0.05
+right 0.05
+top 0.05
+bottom -0.05
+
+light -5 5 5 , 1 0.85 0.72 , 0.000
+
+objects:
+heavy_head data/objects/sonic_unleashed_model.obj
+
+heavy_head
+texture_image data/textures/ch_sonic_a.png
+texture_normals data/textures/ch_sonic_a.png
+ambient 0 0 1
+diffuse 0 0 1
+specular 0.5 0.5 0.5
+shininess 5

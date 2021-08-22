@@ -1,0 +1,24 @@
+camera:
+position 0 0 3
+orientation 0 1 0 0
+near 1
+far 50
+left -0.5
+right 0.5
+top 0.5
+bottom -0.5
+
+light 5 5 5 , 1 1 1 , 0.05
+
+objects:
+heavy_left_eye ../data/objects/heavy_left_eye.obj
+
+heavy_left_eye
+texture_image ../data/textures/eyeball_l.png
+texture_normals ../data/textures/hvyweapon_normal.png
+ambient 0.5 0.5 0.5
+diffuse 0.5 0.5 0.5
+specular 0.5 0.5 0.5
+shininess 0.1
+t 0 -80 0
+s 0.1 0.1 0.1

@@ -1,0 +1,157 @@
+Readme for CS 179 Project
+Project: GPU-accelerated Ray tracing
+Team Members: Philip Carr, Thomas Leing
+
+
+Division of labor:
+Initial CPU implementation: Philip Carr
+kd-tree CPU and GPU implementation: Thomas Leing
+Debugging (non-trivial): Philip Carr and Thomas Leing
+
+
+To run test script:
+    cd src
+    make test
+
+This script compiles the project and runs it on the two scene files scene_bunny.txt
+and scene_armadillo.txt, storing the outputs in rt_test_gpu_bunny_150x150.png and
+rt_test_gpu_armadillo_150x150.png.  The images make sense since they are simply the
+raytraced outputs corresponding to the scenes described in the scene files.
+
+
+Motivation
+Ray tracing is a method of rendering scenes in computer graphics with precise detail
+by closely approximating the way in which light naturally illuminates a scene. Ray
+tracing is thus a highly desired rendering method, as both lighting/shading and
+shadowing of scene objects can be implemented in a relatively physically intuitive way,
+with images that can look very photorealistic. When ray tracing a scene, a ray is cast
+into the scene based on the camera’s direction looking at the scene, the camera’s field
+of view, and other camera properties (the camera frustrum) for each pixel of the rendered
+image. Furthermore, each ray has to be tested to see if it intersects any part of any
+object (a triangle face) in the scene in order for the object to be properly illuminated
+(a similar process occurs for the shadowing, detailed in the next section). This process
+runs very slowly using a CPU implementation, as each pixel must be rendered sequentially.
+However, since each pixel can be rendered independently from the rest of the image, the
+ray-tracing algorithm is parallelizable, which there is potential for significant speedup
+in the runtime of ray tracing.
+
+High-level overview of algorithms
+The ray tracing algorithm is given a kd-tree of all the vertices (three consecutive
+vertices mod 3 make a triangle face (e.g. vertices 0, 1, and 2, vertices 24, 25, and 26, etc.))
+and corresponding vertex normal vectors (vertex normals) of every object, the camera object,
+and array of lights in the scene. For each pixel (i, j), where i is a row in the image and j
+is a column in the image, the camera sends a ray directed out from the camera’s location
+into the scene in the direction corresponding to the projected location of the pixel on
+the screen as perceived by the viewer. The kd-tree is searched-through in a way that
+narrows down the region of space in which the ray could intersect some part of some
+object, and if an intersection occurs, the Phong lighting model is used to color the
+pixel based on location of the ray-object intersection and the lights in the scene
+(if no intersection occurs the pixel is colored black). Furthermore, a ray is sent from
+the ray-object intersection location to a light for each light in the scene to detect
+whether another part of an object is in the way of this ray from the ray-object
+intersection location to the light. If so, the original ray-object intersection location
+is only colored with the object’s ambient color (as opposed to ambient, diffuse, and
+specular colors together) without the diffuse and specular color components due to the
+specific light(s). When all pixels are rendered, the image is printed to a file.
+
+To quickly detect intersections between rays and triangles in order to compute bounces,
+one may employ a data structure known as a kd-tree.  In this structure, k-dimensional
+space is partitioned into axis-aligned boxes via (k-1)-dimensional hyperplanes.  At
+each level of the tree, the hyperplanes are oriented in the same direction, splitting
+each subspace into two “half-spaces” chosen to roughly split the points in the space in
+half.  In this way, a kd-tree can create a balanced binary search tree to partition an
+arbitrarily-clustered collection of points, speeding up ray-triangle intersection from
+O(n^2) to O(n log n).
+
+GPU optimization and specifics
+
+In order to leverage the massively parallel nature of the GPU, we decided to assign
+each thread a set of pixels to raytrace.  While raytracing is sometimes described as an
+embarrassingly parallel problem, in fact it is very non-trivial to have the threads in a
+warp all cohere.  Among the literature we read, we found one paper (Shih 2009) discussing
+the tradeoffs between a packet-based approach in which each warp would collectively
+process a packet of rays all going in roughly the same direction and a more traditional
+stack-based approach, the equivalent of simply recursing down the kd-tree but using a
+manual stack instead of the call stack.  As stack-based ended up being the clear winner,
+we settled on that approach.
+
+Simply transporting the memory required for raytracing from the CPU to the GPU and back
+formed the bulk of our GPU work on this project, surprisingly enough.  While in CS 179
+we mostly dealt with straightforward arrays of primitive data types, moving a bulky,
+complex tangle of structs like a KDTree* is an entirely separate beast.  Ultimately, it
+appears that the tight bound on the amount of local memory each thread can hold privately
+was the bottleneck, at least on the stability of the algorithm.  Above a certain threshold
+of image resolution, which is at least 150x150 pixels, CUDA begins to have difficulty
+handling the memory constraints and falls into consistent crashing.
+
+With GPU acceleration on Titan, we were able to reach speeds of ~1K rays per second traced.
+Compared to the CPU benchmark we submitted last week, this is a roughly 2x speedup over
+that program run on our own laptops.  We were not expecting a massive improvement, as
+other papers (Popov et al.) indicated that running at or above CPU levels was only
+achievable in recent years as the technology improved.
+
+Code structure – description of where important files are
+The src directory contains all the source code files of this project, while the Eigen
+directory is a package used for linear algebra in C++. Important files listed below are
+all in the src directory.
+
+Makefile – contains the code for compiling the project and running the test scripts,
+‘make bunny’ and ‘make armadillo.’
+
+halfedge.h – contains an implementation of the half-edge data structure, which is used
+for generating vertex normal vectors for all given objects in a scene.
+
+PNGMaker.cpp/.hpp – contains code for writing the ray traced image to a file.
+
+raytrace.cpp – the main implementation code for this project is located here. Here,
+the objects, lights, and camera are read from the file, and this file contains the CPU
+ray tracing code, as well as the code for setting up the scene for rendering in OpenGL.
+
+raytrace_device.cu/.cuh – the main implementation code for the GPU kernels are located here.
+The two main kernels here are one to finish connecting the skeleton of a kd-tree which has
+been copied directly from the host, and one to calculate the intersections of all rays in a
+grid with a given kd-tree in a stack-based manner.
+
+scene_read.cpp/.h – the code for reading the given scene file and assigining data values
+for the objects, lights, and camera in the scene.
+
+structs.h – the code for the struct definitions of rays, kd-trees, and vertices.
+
+scene_armadillo.txt – the scene file (containing the lights, camera, and armadillo
+object with associated object transformations) for the armadillo object scene.
+
+scene_bunny.txt – the scene file (containing the lights, camera, and bunny object with
+associated object transformations) for the bunny object scene.
+
+armadillo.obj – the armadillo object file; contains all vertices and triangle faces of the
+armadillo object.
+
+bunny.obj – the bunny object file; contains all vertices and triangle faces of the bunny object.
+
+
+Instructions on how to run smaller components of the project (In addition to demo script)
+
+In terminal:
+    cd into src/ folder
+    Run all the tests by running `make test` -- this creates both tests images as described above.
+
+    Running `make bunny` produces a 150x150 image of the Stanford bunny in the file rt.png.
+    Running `make armadillo` produces a 150x150 image of the Stanford armadillo in the file rt.png.
+    ./raytrace [scene_file.txt] [xres] [yres] [do you want to skip OpenGL?] runs the program
+the long way. If you provide 1 as the last command-line argument, OpenGL is skipped and a
+render is immediately saved.  Providing 0, on the other hand, allows the user to spin the model
+around and then hit r to raytrace as before.
+    
+
+Provided code output when run on Titan, especially if it takes a while to run
+(See images rt_gpu_bunny_150x150.png and rt_gpu_armadillo_150x150.png for output examples of ray
+traced objects using CUDA and rt_cpu_bunny_150x150.png and rt_cpu_armadillo_150x150.png for the
+equivalent CPU code outputs, run on a modified version of the CPU code submitted a week ago.)
+There is no need for partial output, since there is only one type of output -- the image file.
+
+
+Works Cited:
+Shih, Min et al.  “Real-Time Ray Tracing with CUDA.”  doi: 10.1007/978-3-642-03095-6_32.
+Popov, Stephan et al.  “Stackless KD‐Tree Traversal for High Performance GPU Ray Tracing.”  
+  doi: 10.1111/j.1467-8659.2007.01064.x.
+
