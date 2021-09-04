@@ -1,6 +1,6 @@
 ### Hi there 👋
-Check out my Personal Information directory for my resume.\n
-LeetCode Profile: https://leetcode.com/philipmcarr1/
+#### Check out my Personal Information directory for my resume.
+#### LeetCode Profile: https://leetcode.com/philipmcarr1/
 
 <!--
 **pmc1gh/pmc1gh** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
