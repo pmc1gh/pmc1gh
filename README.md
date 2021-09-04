@@ -1,5 +1,5 @@
 ### Hi there 👋
-Check out my Personal Information directory for my resume.
+Check out my Personal Information directory for my resume.\n
 LeetCode Profile: https://leetcode.com/philipmcarr1/
 
 <!--
