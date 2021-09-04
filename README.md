@@ -1,5 +1,4 @@
 ### Hi there 👋
-#### Check out my Personal Information directory for my resume.
 #### LeetCode Profile: https://leetcode.com/philipmcarr1/
 
 <!--
