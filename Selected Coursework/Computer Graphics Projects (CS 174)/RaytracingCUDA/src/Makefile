@@ -55,7 +55,8 @@ raytrace: *.cpp raytrace_device.o
 	#$(CC) $^ -o $@ -O3 $(LDFLAGS) -lrt -lGLEW -lGL -lGLU -lglut -lm -lpng -Wall -I$(CUDA_INC_PATH)
 	# this works: $(CC) $^ -o $@ -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
 	# these don't: $(CC) $^ -o $@ -O3 $(LDFLAGS) -lrt -lGLEW -lGL -lGLU -lglut -lm -lpng -g -fsanitize=address -ggdb3 -Wall -I$(CUDA_INC_PATH)
-	$(CC) $^ -o $@ -O0 $(LDFLAGS) $(LD_FLAGS) -Wall -I$(CUDA_INC_PATH)
+	#$(CC) $^ -o $@ -O0 $(LDFLAGS) $(LD_FLAGS) -Wall -I$(CUDA_INC_PATH)
+	$(CC) $^ -o $@ -O0 $(LDFLAGS) $(LD_FLAGS) -w -I$(CUDA_INC_PATH)
 
 raytrace_device.o: raytrace_device.cu
 	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<

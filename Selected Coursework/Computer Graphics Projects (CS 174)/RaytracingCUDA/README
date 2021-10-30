@@ -1,3 +1,15 @@
+Readme for CS 174 Project
+Project: Ray tracing and cel shading renderer
+Team Members: Philip Carr, Thomas Leing
+
+Project Code for GPU-accelerated ray tracing
+and GPU-accelerated cel shading (with object
+outline rendering done on CPU).
+
+Readme for CS 179 Project (details about the
+CPU and GPU ray tracing, of which the GPU ray
+tracing was specifically the CS 179 Project)
+
 Readme for CS 179 Project
 Project: GPU-accelerated Ray tracing
 Team Members: Philip Carr, Thomas Leing

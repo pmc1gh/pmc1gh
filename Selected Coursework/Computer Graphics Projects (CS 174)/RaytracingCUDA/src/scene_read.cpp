@@ -656,6 +656,10 @@ vector<Point_Light> read_lights(const string filename) {
 
             ifs >> a >> b >> c >> s1 >> d >> e >> f >> s2 >> g;
 
+            new_light.fixed_pos[0] = a;
+            new_light.fixed_pos[1] = b;
+            new_light.fixed_pos[2] = c;
+            new_light.fixed_pos[3] = 1; // w coordinate
             new_light.pos[0] = a;
             new_light.pos[1] = b;
             new_light.pos[2] = c;

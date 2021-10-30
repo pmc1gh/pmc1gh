@@ -58,5 +58,156 @@ void main()
     vec4 color = min(vec4(1,1,1,1), ambient + diffuse * diffuse_sum
                      + specular * specular_sum);
 
-    gl_FragColor = color;
+    // cel shading routine
+    float num_cel_shaded_colors = 3.0;
+    float red = color.x;
+    float green = color.y;
+    float blue = color.z;
+    float max_rgb_value = max(max(red, green), blue);
+    float min_rgb_value = min(min(red, green), blue);
+    float lightness = (max_rgb_value + min_rgb_value) / 2.0;
+
+    float saturation = 0.0;
+    float red_diff = color.x;
+    float green_diff = color.y;
+    float blue_diff = color.z;
+    float max_rgb_value_diff = max(max(red_diff, green_diff), blue_diff);
+    float min_rgb_value_diff = min(min(red_diff, green_diff), blue_diff);
+    if (max_rgb_value_diff != min_rgb_value_diff) {
+        if (lightness < 0.5) {
+            saturation = (max_rgb_value_diff - min_rgb_value_diff)
+                         / (max_rgb_value_diff + min_rgb_value_diff);
+        }
+        else {
+            saturation = (max_rgb_value_diff - min_rgb_value_diff)
+                         / (2.0 - max_rgb_value_diff - min_rgb_value_diff);
+        }
+    }
+
+    float hue;
+    if (red_diff == max_rgb_value_diff) {
+        hue = (green_diff - blue_diff)
+              / (max_rgb_value_diff - min_rgb_value_diff);
+    }
+    else if (green_diff == max_rgb_value_diff) {
+        hue = 2.0 + (blue_diff - red_diff)
+                    / (max_rgb_value_diff - min_rgb_value_diff);
+    }
+    else {
+        hue = 4.0 + (red_diff - green_diff)
+                    / (max_rgb_value_diff - min_rgb_value_diff);
+    }
+    hue *= 60.0;
+    if (hue < 0.0) {
+        hue += 360.0;
+    }
+
+    float cel_shaded_lightness = 0.0;
+    while (cel_shaded_lightness < lightness) {
+        cel_shaded_lightness += 1.0 / num_cel_shaded_colors;
+    }
+
+    // hsl to rgb conversion
+    float red_cel_shaded, green_cel_shaded, blue_cel_shaded;
+    if (saturation == 0.0) {
+        red_cel_shaded = cel_shaded_lightness;
+        green_cel_shaded = cel_shaded_lightness;
+        blue_cel_shaded = cel_shaded_lightness;
+    }
+    else {
+        float temp1, temp2;
+        if (cel_shaded_lightness < 0.5) {
+            temp1 = cel_shaded_lightness * (1.0 + saturation);
+        }
+        else {
+            temp1 = cel_shaded_lightness + saturation
+                    - cel_shaded_lightness * saturation;
+        }
+
+        temp2 = 2.0 * cel_shaded_lightness - temp1;
+
+        hue /= 360.0;
+
+        float temp_red, temp_green, temp_blue;
+        temp_red = hue + 1.0 / 3.0;
+        temp_green = hue;
+        temp_blue = hue - 1.0 / 3.0;
+
+        if (temp_red < 0.0) {
+            temp_red += 1.0;
+        }
+        if (temp_green < 0.0) {
+            temp_green += 1.0;
+        }
+        if (temp_blue < 0.0) {
+            temp_blue += 1.0;
+        }
+
+        // if (temp_red > 0.0) {
+        //     temp_red -= 1.0;
+        // }
+        // if (temp_green > 0.0) {
+        //     temp_green -= 1.0;
+        // }
+        // if (temp_blue > 0.0) {
+        //     temp_blue -= 1.0;
+        // }
+        if (temp_red > 1.0) {
+            temp_red -= 1.0;
+        }
+        if (temp_green > 1.0) {
+            temp_green -= 1.0;
+        }
+        if (temp_blue > 1.0) {
+            temp_blue -= 1.0;
+        }
+
+        if (6.0 * temp_red < 1.0) {
+            red_cel_shaded = temp2 + (temp1 - temp2) * 6.0 * temp_red;
+        }
+        else if (2.0 * temp_red < 1.0) {
+            red_cel_shaded = temp1;
+        }
+        else if (3.0 * temp_red < 2.0) {
+            red_cel_shaded = temp2 + (temp1 - temp2) * (2.0 / 3.0 - temp_red)
+                             * 6.0;
+        }
+        else {
+            red_cel_shaded = temp2;
+        }
+
+        if (6.0 * temp_green < 1.0) {
+            green_cel_shaded = temp2 + (temp1 - temp2) * 6.0 * temp_green;
+        }
+        else if (2.0 * temp_green < 1.0) {
+            green_cel_shaded = temp1;
+        }
+        else if (3.0 * temp_green < 2.0) {
+            green_cel_shaded = temp2 + (temp1 - temp2)
+                                  * (2.0 / 3.0 - temp_green) * 6.0;
+        }
+        else {
+            green_cel_shaded = temp2;
+        }
+
+        if (6.0 * temp_blue < 1.0) {
+            blue_cel_shaded = temp2 + (temp1 - temp2) * 6.0 * temp_blue;
+        }
+        else if (2.0 * temp_blue < 1.0) {
+            blue_cel_shaded = temp1;
+        }
+        else if (3.0 * temp_blue < 2.0) {
+            blue_cel_shaded = temp2 + (temp1 - temp2)
+                                 * (2.0 / 3.0 - temp_blue) * 6.0;
+        }
+        else {
+            blue_cel_shaded = temp2;
+        }
+    }
+
+    vec4 color_cel_shaded =
+        vec4(red_cel_shaded, green_cel_shaded, blue_cel_shaded, 1);
+
+    // gl_FragColor = color;
+    gl_FragColor = color_cel_shaded;
 }

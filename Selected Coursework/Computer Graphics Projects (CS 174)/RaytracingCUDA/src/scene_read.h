@@ -62,6 +62,13 @@ struct Point_Light {
      * Index 2 has the z-coordinate
      * Index 3 has the w-coordinate
      */
+    float fixed_pos[4];
+
+    /* Index 0 has the x-coordinate
+     * Index 1 has the y-coordinate
+     * Index 2 has the z-coordinate
+     * Index 3 has the w-coordinate
+     */
     float pos[4]; // position
 
     /* Index 0 has the r-component
@@ -132,6 +139,9 @@ struct Object {
 
     vector<Matrix4f> t_transform_matrices;
     vector<Matrix4f> n_transform_matrices;
+
+    vector<Vertex> world_space_vertices;
+    vector<Vec3f> world_space_normals;
 
     vector<Vertex> transformed_vertices;
     vector<Vec3f> transformed_normals;

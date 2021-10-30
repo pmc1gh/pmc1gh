@@ -175,6 +175,9 @@ void transform_objects(bool init, bool do_gl);
 // ray tracing function helpers
 bool is_in_shadow(Vector3f p, Vector3f l);
 
+// cel shading functions
+void draw_object_outlines();
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Camera and lists of lights and objects.
@@ -220,6 +223,8 @@ int mode;
 float h;
 int smooth_toggle = false;
 bool smooth_turned_off = false;
+
+int q_rotation_setting = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -299,6 +304,8 @@ void init(string filename, int mode, bool do_gl) {
     current_rotation = quaternion(1, 0, 0, 0);
 
     transform_objects(true, do_gl);
+
+    glClearColor(101.0/255, 218.0/255, 255.0/255, 1);
 }
 
 /**
@@ -410,6 +417,7 @@ void reshape(int width, int height) {
  */
 void display(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(101.0/255, 218.0/255, 255.0/255, 1);
 
     glLoadIdentity();
 
@@ -445,21 +453,21 @@ void display(void) {
         0, 0, 0, 1
     };
 
-    glMultMatrixf(rotation_matrix);
+    // glMultMatrixf(rotation_matrix);
 
     Matrix4f q_v_transform;
     q_v_transform <<
-         rotation_matrix[0], rotation_matrix[1],
-         rotation_matrix[2], rotation_matrix[3],
+         rotation_matrix[0], rotation_matrix[4],
+         rotation_matrix[8], rotation_matrix[12],
 
-         rotation_matrix[4], rotation_matrix[5],
-         rotation_matrix[6], rotation_matrix[7],
+         rotation_matrix[1], rotation_matrix[5],
+         rotation_matrix[9], rotation_matrix[13],
 
-         rotation_matrix[8], rotation_matrix[9],
-         rotation_matrix[10], rotation_matrix[11],
+         rotation_matrix[2], rotation_matrix[6],
+         rotation_matrix[10], rotation_matrix[14],
 
-         rotation_matrix[12], rotation_matrix[13],
-         rotation_matrix[14], rotation_matrix[15];
+         rotation_matrix[3], rotation_matrix[7],
+         rotation_matrix[11], rotation_matrix[15];
 
     Matrix4f q_v_transform_inv = q_v_transform.inverse();
     Matrix4f q_n_transform = q_v_transform_inv.transpose();
@@ -478,43 +486,67 @@ void display(void) {
     cam_dir_3f(1) = cam_dir_4f(1) / cam_dir_4f(3);
     cam_dir_3f(2) = cam_dir_4f(2) / cam_dir_4f(3);
 
-    // for (int i = 0; i < (int) objects.size(); i++) {
-    //     // Transform all the vertices in the given vector of vertices.
-    //     vector<Vertex> v_vector = objects[i].transformed_vertices;
-    //
-    //     vector<Vertex> t_vertices;
-    //     vector<Vec3f> t_normals;
-    //
-    //     for (int k = 0; k < (int) v_vector.size(); k++) {
-    //         Vector4f v;
-    //         v << v_vector[k].x, v_vector[k].y, v_vector[k].z, 1.0;
-    //         Vector4f tv;
-    //         tv = q_v_transform * v;
-    //         Vertex t_vertex;
-    //         t_vertex.x = tv(0) / tv(3);
-    //         t_vertex.y = tv(1) / tv(3);
-    //         t_vertex.z = tv(2) / tv(3);
-    //         t_vertices.push_back(t_vertex);
-    //     }
-    //
-    //     vector<Vec3f> vn_vector = objects[i].transformed_normals;
-    //     for (int k = 0; k < (int) vn_vector.size(); k++) {
-    //         Vector4f vn;
-    //         vn << vn_vector[k].x, vn_vector[k].y, vn_vector[k].z, 1.0;
-    //         Vector4f tvn;
-    //         tvn = q_n_transform * vn;
-    //         Vec3f t_vnorm;
-    //         t_vnorm.x = tvn(0) / tvn(3);
-    //         t_vnorm.y = tvn(1) / tvn(3);
-    //         t_vnorm.z = tvn(2) / tvn(3);
-    //         t_normals.push_back(t_vnorm);
-    //     }
-    //
-    //     objects[i].transformed_vertices = t_vertices;
-    //     objects[i].transformed_normals = t_normals;
-    // }
+    if (q_rotation_setting != 2) {
+    for (int i = 0; i < (int) objects.size(); i++) {
+        // Transform all the vertices in the given vector of vertices.
+        vector<Vertex> v_vector = objects[i].world_space_vertices;
+
+        vector<Vertex> t_vertices;
+        vector<Vec3f> t_normals;
+
+        for (int k = 0; k < (int) v_vector.size(); k++) {
+            Vector4f v;
+            v << v_vector[k].x, v_vector[k].y, v_vector[k].z, 1.0;
+            Vector4f tv;
+            tv = q_v_transform * v;
+            Vertex t_vertex;
+            t_vertex.x = tv(0) / tv(3);
+            t_vertex.y = tv(1) / tv(3);
+            t_vertex.z = tv(2) / tv(3);
+            t_vertices.push_back(t_vertex);
+        }
+
+        vector<Vec3f> vn_vector = objects[i].world_space_normals;
+        for (int k = 0; k < (int) vn_vector.size(); k++) {
+            Vector4f vn;
+            vn << vn_vector[k].x, vn_vector[k].y, vn_vector[k].z, 1.0;
+            Vector4f tvn;
+            tvn = q_n_transform * vn;
+            Vec3f t_vnorm;
+            t_vnorm.x = tvn(0) / tvn(3);
+            t_vnorm.y = tvn(1) / tvn(3);
+            t_vnorm.z = tvn(2) / tvn(3);
+            t_normals.push_back(t_vnorm);
+        }
+
+        objects[i].transformed_vertices = t_vertices;
+        objects[i].transformed_normals = t_normals;
+    }
+    }
+
+    if (q_rotation_setting != 1) {
+    for (int i = 0; i < (int) lights.size(); i++) {
+        Vector4f l_pos;
+        l_pos << lights[i].fixed_pos[0], lights[i].fixed_pos[1], lights[i].fixed_pos[2],
+                 lights[i].fixed_pos[3];
+        Vector4f t_l_pos;
+        t_l_pos = q_v_transform * l_pos;
+        lights[i].pos[0] = t_l_pos(0);
+        lights[i].pos[1] = t_l_pos(1);
+        lights[i].pos[2] = t_l_pos(2);
+        lights[i].pos[3] = t_l_pos(3);
+    }
+    }
 
     set_lights();
+
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_FRONT);
+
+    draw_object_outlines();
+
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
 
     draw_objects();
 
@@ -677,8 +709,169 @@ void transform_objects(bool init, bool do_gl) {
             t_normals.push_back(t_vnorm);
         }
 
+        objects[i].world_space_vertices = t_vertices;
+        objects[i].world_space_normals = t_normals;
         objects[i].transformed_vertices = t_vertices;
         objects[i].transformed_normals = t_normals;
+    }
+}
+
+/**
+ * Draw the objects in the scene. New note: add functionality to add array of
+ * all triangle faces of all objects for ray tracing function to find ray-
+ * object intersections.
+ */
+void draw_object_outlines() {
+    int num_objects = objects.size();
+
+    for(int i = 0; i < num_objects; ++i)
+    {
+        // glPushMatrix();
+
+        {
+            // int num_transform_sets = objects[i].transform_sets.size();
+
+            /* Modify the current modelview matrix with the
+             * geometric transformations for this object.
+             */
+            // for(int j = num_transform_sets - 1; j >= 0 ; j--) {
+            //     Obj_Transform transform = objects[i].transform_sets[j];
+            //     if (transform.type == "t") {
+            //         glTranslatef(transform.components[0],
+            //                      transform.components[1],
+            //                      transform.components[2]);
+            //     }
+            //     else if (transform.type == "r") {
+            //         glRotatef(transform.rotation_angle,
+            //                   transform.components[0], transform.components[1],
+            //                   transform.components[2]);
+            //     }
+            //     else {
+            //         glScalef(transform.components[0], transform.components[1],
+            //                  transform.components[2]);
+            //     }
+            // }
+
+            // float outline_color[3]; // red
+            // outline_color[0] = 1;
+            // outline_color[1] = 0;
+            // outline_color[2] = 0;
+            // float outline_shininess = 0;
+            // float outline_color2[3]; // red
+            // outline_color2[0] = 0;
+            // outline_color2[1] = 1;
+            // outline_color2[2] = 0;
+            // float outline_shininess2 = 1;
+            // glMaterialfv(GL_FRONT, GL_AMBIENT, outline_color);
+            // glMaterialfv(GL_FRONT, GL_DIFFUSE, outline_color2);
+            // glMaterialfv(GL_FRONT, GL_SPECULAR, outline_color2);
+            // glMaterialf(GL_FRONT, GL_SHININESS, outline_shininess);
+
+            float outline_color[3]; // black
+            outline_color[0] = 0;
+            outline_color[1] = 0;
+            outline_color[2] = 0;
+            float outline_shininess = 0;
+            glMaterialfv(GL_FRONT, GL_AMBIENT, outline_color);
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, outline_color);
+            glMaterialfv(GL_FRONT, GL_SPECULAR, outline_color);
+            glMaterialf(GL_FRONT, GL_SHININESS, outline_shininess);
+
+            Matrix4f outline_matrix;
+            outline_matrix << 1.1, 0, 0, 0,
+                              0, 1.1, 0, 0,
+                              0, 0, 1.1, 0,
+                              0, 0, 0, 1;
+
+            vector<Vertex> outline_vertices;
+            for (int j = 0; j < (int) objects[i].transformed_vertices.size();
+                 j+=3) {
+                // Vector4f outline_vertex4f1;
+                // outline_vertex4f1 << objects[i].transformed_vertices[j].x,
+                //                      objects[i].transformed_vertices[j].y,
+                //                      objects[i].transformed_vertices[j].z, 1;
+                // outline_vertex4f1 = outline_matrix * outline_vertex4f1;
+                // Vertex outline_vertex1;
+                // outline_vertex1.x = outline_vertex4f1(0) / outline_vertex4f1(3);
+                // outline_vertex1.y = outline_vertex4f1(1) / outline_vertex4f1(3);
+                // outline_vertex1.z = outline_vertex4f1(2) / outline_vertex4f1(3);
+                //
+                // Vector4f outline_vertex4f2;
+                // outline_vertex4f2 << objects[i].transformed_vertices[j+1].x,
+                //                      objects[i].transformed_vertices[j+1].y,
+                //                      objects[i].transformed_vertices[j+1].z, 1;
+                // outline_vertex4f2 = outline_matrix * outline_vertex4f2;
+                // Vertex outline_vertex2;
+                // outline_vertex2.x = outline_vertex4f2(0) / outline_vertex4f2(3);
+                // outline_vertex2.y = outline_vertex4f2(1) / outline_vertex4f2(3);
+                // outline_vertex2.z = outline_vertex4f2(2) / outline_vertex4f2(3);
+                //
+                // Vector4f outline_vertex4f3;
+                // outline_vertex4f3 << objects[i].transformed_vertices[j+2].x,
+                //                   objects[i].transformed_vertices[j+2].y,
+                //                   objects[i].transformed_vertices[j+2].z, 1;
+                // outline_vertex4f3 = outline_matrix * outline_vertex4f3;
+                // Vertex outline_vertex3;
+                // outline_vertex3.x = outline_vertex4f3(0) / outline_vertex4f3(3);
+                // outline_vertex3.y = outline_vertex4f3(1) / outline_vertex4f3(3);
+                // outline_vertex3.z = outline_vertex4f3(2) / outline_vertex4f3(3);
+
+                float x_mult = 0.01;
+                float y_mult = 0.01;
+                float z_mult = 0.01;
+
+                Vec3f vnorm1 = objects[i].transformed_normals[j];
+                Vertex outline_vertex1 = objects[i].transformed_vertices[j];
+                outline_vertex1.x += vnorm1.x * x_mult;
+                outline_vertex1.y += vnorm1.y * y_mult;
+                outline_vertex1.z += vnorm1.z * z_mult;
+
+                Vec3f vnorm2 = objects[i].transformed_normals[j+1];
+                Vertex outline_vertex2 = objects[i].transformed_vertices[j+1];
+                outline_vertex2.x += vnorm2.x * x_mult;
+                outline_vertex2.y += vnorm2.y * y_mult;
+                outline_vertex2.z += vnorm2.z * z_mult;
+
+                Vec3f vnorm3 = objects[i].transformed_normals[j+2];
+                Vertex outline_vertex3 = objects[i].transformed_vertices[j+2];
+                outline_vertex3.x += vnorm3.x * x_mult;
+                outline_vertex3.y += vnorm3.y * y_mult;
+                outline_vertex3.z += vnorm3.z * z_mult;
+
+                outline_vertices.push_back(outline_vertex2);
+                outline_vertices.push_back(outline_vertex1);
+                outline_vertices.push_back(outline_vertex3);
+            }
+
+            // vector<Vec3f> inverted_normals;
+            // for (int j = 0; j < (int) objects[i].transformed_vertices.size();
+            //      j++) {
+            //
+            //     Vec3f normal = objects[i].transformed_normals[j];
+            //     Vec3f inverted_normal;
+            //     inverted_normal.x = normal.x;
+            //     inverted_normal.y = normal.y;
+            //     inverted_normal.z = normal.z;
+            //     inverted_normals.push_back(inverted_normal);
+            // }
+
+            // glVertexPointer(3, GL_FLOAT, 0, &objects[i].vertex_buffer[0]);
+            glVertexPointer(3, GL_FLOAT, 0, &outline_vertices[0]);
+
+            // glNormalPointer(GL_FLOAT, 0, &objects[i].normal_buffer[0]);
+            // glNormalPointer(GL_FLOAT, 0, &inverted_normals[0]);
+            glNormalPointer(GL_FLOAT, 0, &objects[i].transformed_normals[0]);
+
+            int buffer_size = objects[i].vertex_buffer.size();
+
+            // if(!wireframe_mode)
+                glDrawArrays(GL_TRIANGLES, 0, buffer_size);
+            // else
+            //     for(int j = 0; j < buffer_size; j += 3)
+            //         glDrawArrays(GL_LINE_LOOP, j, 3);
+        }
+
+        // glPopMatrix();
     }
 }
 
@@ -1156,17 +1349,17 @@ KDTreeCUDA* copyKDTreeCUDA(KDTree* hostTree) {
 // Free allocated KD-tree from GPU.
 __global__
 void freeKDTreeCUDA(KDTreeCUDA* deviceTree) {
-    /*
-    if(deviceTree->left != NULL) {
-        freeKDTreeCUDA(deviceTree->left);
-    }
-    if(deviceTree->right != NULL) {
-        freeKDTreeCUDA(deviceTree->right);
-    }
-    //CUDA_CALL( cudaFree(deviceTree->tris) );
-    //CUDA_CALL( cudaFree(deviceTree->normals) );
-    CUDA_CALL( cudaFree(deviceTree) );
-    */
+
+    // if(deviceTree->left != NULL) {
+    //     freeKDTreeCUDA(deviceTree->left);
+    // }
+    // if(deviceTree->right != NULL) {
+    //     freeKDTreeCUDA(deviceTree->right);
+    // }
+    // //CUDA_CALL( cudaFree(deviceTree->tris) );
+    // //CUDA_CALL( cudaFree(deviceTree->normals) );
+    // CUDA_CALL( cudaFree(deviceTree) );
+
 }
 
 // Returns ray-object intersection closest to the given ray origin for GPU ray
@@ -1681,6 +1874,7 @@ void raytrace() {
     cout << "Starting ray tracing" << endl;
 
     // Create kd-trees for all objects
+    // place this section in init so the kd-tree isn't created multiple times.
     vector<KDTree*> trees;
     milliseconds ms_before = duration_cast< milliseconds >(
         system_clock::now().time_since_epoch()
@@ -1947,6 +2141,20 @@ void key_pressed(unsigned char key, int x, int y) {
         // findAllIntersections(intersections, camera_ray);
         raytrace();
     }
+    else if (key == 'l') {
+        if (q_rotation_setting == 0) {
+            cout << "Rotating objects only." << endl;
+            q_rotation_setting = 1;
+        }
+        else if (q_rotation_setting == 1) {
+            cout << "Rotating lights only." << endl;
+            q_rotation_setting = 2;
+        }
+        else {
+            cout << "Rotating both objects and lights." << endl;
+            q_rotation_setting = 0;
+        }
+    }
     else {
         float x_view_rad = deg2rad(x_view_angle);
 
@@ -2036,7 +2244,7 @@ int main(int argc, char* argv[])
     bool should_raytrace = atoi(argv[4]);
 
     // mode = 0 for Gouraud shading, mode = 1 for Phong shading.
-    mode = 0;
+    mode = 1;
 
     // If 4th command line argument is equal to 1, immediately ray trace the
     // scene without running OpenGL and exit once ray tracing ends.
