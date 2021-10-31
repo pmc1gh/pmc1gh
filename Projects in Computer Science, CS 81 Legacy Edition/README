@@ -1,37 +1,29 @@
 Philip Carr
-CS 171 Assignment 4
-November 17, 2018
+Projects in Computer Science CS 81 Legacy Edition
+Updated/Cleaned Up CS 81 Project
+Original CS 81 Project Timeline: Fall 2019 - Spring 2020
+Updated CS 81 Project Timeline: Fall 2020
 README
 
-Note:
-Due to file size constraints, the armadillo.obj file was removed from the
-part1/data directory.
+Descriptions of the program features:
+This program has two major features:
+1. Renders 3D triangle mesh models (.obj files) in the art style of the
+   video game Team Fortress 2 as detailed by Mitchell, J., Francke, M.,
+   and Eng, D. 2007. This program utilizes a variety of techniques such
+   as texture-mapped diffuse lighting and rim lighting.
 
-Descriptions of the programs:
-The directory part1 contains the program for rendering scenes using either
-Gouraud shading or Phong shading, and the directory part2 contains the program
-for rendering a texture with normal mapping. Both scenes can be rotated with an
-Arcball mouse UI.
+2. Animates a 2-dimensional heightmap (triangle mesh sheet oriented
+   along the xy-plane) with any given time-dependent function of 2
+   variables (e.g. h = f(t; x, y)).
 
 Compiling the programs:
-In each directory, open the terminal and type make to compile the respective
-program. Both directories' Makefiles create an executable file named
-glsl_renderer.
+In the project directory, open the terminal and type "make" to compile the
+program. This should create an executable file named "glsl_renderer".
 
-Executing the programs: The usage statements for both programs are stated below.
-Also, both executable programs generated after running make in each directory
-can be run in the terminal and each will display a usage statement to show how
-the program should be run if specified with no command line arguments.
+Executing the programs: Run glsl_renderer with appropriate command line
+arguments, as shown by initially running glsl_renderer with no additional
+arguments.
 
 Click and drag on the scene to rotate the scene using the Arcball mouse UI.
 
 Using make clean will delete the executable in the respective directory.
-
-Usage statements ($ represents terminal command line):
-part1:
-$ ./glsl_renderer
-Usage: ./glsl_renderer [scene_description_file.txt] [xres] [yres] [mode]
-
-part2:
-$ ./glsl_renderer
-Usage: ./glsl_renderer [color_texture.png] [normal_map.png]
