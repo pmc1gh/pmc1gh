@@ -1,0 +1,82 @@
+Philip Carr
+CS 171 Assignment 6
+November 30, 2018
+README
+
+Note: Mathematica was used in the derivations of the symplectic time integrator
+equations (using the discrete Lagrangian) for the single spring pendulum and double
+spring pendulum systems. (The discrete Lagrangian expressions for both of these systems
+were derived by hand). The elastic system was solved just by hand since this system was
+simpler to solve than the single and double spring pendulum systems were.
+
+Description of the programs:
+In the Part1 directory, there are three separate directories, each containing programs of
+simluations of physical systems (Single Spring Pendulum, Double Spring Pendulum,
+and Elasticity (Elastic Mesh)).
+
+In the Part2 directory, there are two separate directories, each containing programs of
+animations made using keyframe interpolation (I_Bar and Bunny_Frames).
+
+Compiling the programs:
+In each directory (for Part 1 and Part 2), make can be entered into the terminal to
+compile the programs.
+
+Executing the programs: The usage statements for the programs are stated below.
+Also, some of the executable programs generated after running make in each directory
+can be run in the terminal and will display a usage statement to show how the
+program should be run if specified with no command line arguments when applicable. All
+usage statements for each program are also shown below.
+
+Part1/Single_Spring_Pendulum/single_pendulum:
+This program takes two integers xres and yres for the image resolution, and two floats
+x_start and y_start for the initial position of the pendulum weight.
+
+Part1/Double_Spring_Pendulum/double_pendulum:
+This program takes two integers xres and yres for the image resolution, and four floats
+x_start_1, y_start_1, x_start_2, and y_start_2 for the initial positions of the
+respective pendulum weights (with weight 1 being the weight attached to the pendulum
+pivot and the weight below).
+
+Part1/Elasticity/simulate:
+This program takes an object filename (man.obj in this directory) to simulate
+elasticity.
+
+Part2/I_Bar/keyframe:
+This program takes a script (.script) filename, and two integers xres and yres for the
+image resolution. Pressing the 'l' key changes the scene from one frame to the next
+frame, looping back to the start of the animation if the 'l' key is pressed while the
+last frame in the animation is currently being displayed.
+
+Part2/Bunny_Frames/interpolate:
+This program takes no command line arguments. Keyframe objects and interpolated objects
+are printed to the Part2/Bunny_Frames/output directory by this program.
+
+Extra Program for Part2/Bunny_Frames: Part2/Bunny_Frames/output/animate_bunny:
+This program is a modified from the Assignment 5 code to allow the user to cycle
+through the keyframe and interpolated bunny objects created by the interpolate program
+above. This program takes two integers xres and yres for the image resolution. Pressing
+'l' in the OpenGL window changes the scene to display the next frame in the
+animation of bunny frames, and loops back to the start after pressing 'l' while the
+last frame in the animation is currently being displayed.
+
+Using make clean will delete the executable file in the respective directory in which
+the command is run.
+
+Usage statements ($ represents terminal command line):
+Part1/Single_Spring_Pendulum:
+$ ./single_pendulum [xres] [yres] [x_start] [y_start]
+
+Part1/Double_Spring_Pendulum:
+$ ./double_pendulum [xres] [yres] [x_start_1] [y_start_1] [x_start_2] [y_start_2]
+
+Part1/Elasticity:
+$ ./simulate [object_file.obj]
+
+Part2/I_Bar:
+$ ./keyframe [script_file.script] [xres] [yres]
+
+Part2/Bunny_Frames:
+$ ./interpolate
+
+Part2/Bunny_Frames/output:
+$ ./animate_bunny [xres] [yres]

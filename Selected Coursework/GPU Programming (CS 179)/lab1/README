@@ -1,0 +1,141 @@
+CS 179: GPU Computing
+Lab 1: Introduction to CUDA
+Name: Philip Carr
+
+================================================================================
+Question 1: Common Errors (20 points)
+================================================================================
+
+--------------------------------------------------------------------------------
+1.1
+--------------------------------------------------------------------------------
+Issue: The int pointer a is set to an invalid memory address in the line
+"int *a = 3;". Therefore, when the program reaches the line "*a = *a + 2", the
+program crashes because the value of a at memory address 3 is not allowed to be
+modified.
+
+Fix:
+void test1() {
+    int *a = (int *) malloc(sizeof(int));
+    if (!a) {
+        printf("Out of memory\n");
+        exit(-1);
+    }
+    *a = 3;
+    *a = *a + 2;
+    printf("%d\n", *a);
+}
+
+--------------------------------------------------------------------------------
+1.2
+--------------------------------------------------------------------------------
+Issue: b is declared as an int, not as an int pointer.
+
+Fix:
+void test2() {
+    int *a, *b;
+    a = (int *) malloc(sizeof (int));
+    b = (int *) malloc(sizeof (int));
+
+    if (!(a && b)) {
+        printf("Out of memory\n");
+        exit(-1);
+    }
+    *a = 2;
+    *b = 3;
+}
+
+--------------------------------------------------------------------------------
+1.3
+--------------------------------------------------------------------------------
+Issue: The statement "*a = (int *) malloc(1000)" does not allocate an array of
+1000 integers. Instead, this statement allocates an array of 1000 bytes (where
+instead ints are 4 bytes each, so the a would need 1000 * sizeof(int) = 4000
+bytes allocated).
+
+Fix:
+void test3() {
+    int i, *a = (int *) malloc(1000 * sizeof(int));
+
+    if (!a) {
+        printf("Out of memory\n");
+        exit(-1);
+    }
+    for (i = 0; i < 1000; i++)
+        *(i + a) = i;
+}
+
+--------------------------------------------------------------------------------
+1.4
+--------------------------------------------------------------------------------
+Issue: As given, each row of a is not initialized to have size of 100 ints.
+Also, a is not verified to have been allocated successfully.
+
+Fix:
+void test4() {
+    int i, **a = (int **) malloc(3 * sizeof (int *));
+    if (!a) {
+        printf("Out of memory\n");
+        exit(-1);
+    }
+    for (i = 0; i < 3; i++) {
+        a[i] = (int *) malloc(100 * sizeof(int));
+    }
+    a[1][1] = 5;
+}
+
+--------------------------------------------------------------------------------
+1.5
+--------------------------------------------------------------------------------
+Issue: The expression "!a" does not check if the value pointed to by a is 0.
+Instead, this expression checks if the pointer's address value is invalid. Also,
+a is not verified to have been allocated successfully.
+
+Fix:
+void test5() {
+    int *a = (int *) malloc(sizeof (int));
+    if (!a) {
+        printf("Out of memory\n");
+        exit(-1);
+    }
+    scanf("%d", a);
+    if (!(*a))
+        printf("Value is 0\n");
+}
+
+================================================================================
+Question 2: Parallelization (30 points)
+================================================================================
+
+--------------------------------------------------------------------------------
+2.1 The calculation of y_1[n] is expected to have an easier and faster
+implementation on the GPU than y_2[n], since y_1[n] only depends of the input
+x, while y_2[n] depends on both the input x as well as other values in y_2,
+resulting in interdependence between values in y_2 (y_2[n] depends on the values
+y_2[n - 2] and y_2[n - 1]).
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+2.2 y[n] = c * x[n] + (1 - c) * y[n - 1]
+=> y[n - 1] = c * x[n - 1] + (1 - c) * y[n - 2]
+=> y[n - k] = c * x[n - k] + (1 - c) * y[n - (k + 1)]. Therefore,
+expanding y[n - 1] in y[n] = c * x[n] + (1 - c) * y[n - 1] gives
+y[n] = c * x[n] + (1 - c) * y[n - 1] = y[n]
+= c * x[n] + (1 - c) * (c * x[n - 1] + (1 - c) * y[n - 2])
+= c * (x[n] + (1 - c) * x[n - 1]) + (1 - c)^2 * y[n - 2]
+=> y[n] = c * (x[n] + (1 - c) * x[n - 1] + ... + (1 - c)^k * x[n - k])
+          + (1 - c)^(k + 1) * y[n - (k + 1)].
+Allowing y[n] to be approxmated to k terms, the last term y[n - (k + 1)] can be
+set to 0 (since if c is close to 1, then (1 - c)^(k + 1) is close to 0), giving
+the following approximation for y[n]:
+y[n] = c * (x[n] + (1 - c) * x[n - 1] + ... + (1 - c)^k * x[n - k]).
+Since this expression for y[n] above has no interdependence on other values in
+y, this approximation for y[n] is parallelizable.
+--------------------------------------------------------------------------------
+
+================================================================================
+Question 3: Small-Kernel Convolution (50 points)
+================================================================================
+
+(See code in src directory. Running noaudio-blur with 128 threads per block and
+block size of 32 results in ~16x speedup.)

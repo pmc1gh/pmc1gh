@@ -1,0 +1,37 @@
+Philip Carr
+CS 171 Assignment 4
+November 17, 2018
+README
+
+Note:
+Due to file size constraints, the armadillo.obj file was removed from the
+part1/data directory.
+
+Descriptions of the programs:
+The directory part1 contains the program for rendering scenes using either
+Gouraud shading or Phong shading, and the directory part2 contains the program
+for rendering a texture with normal mapping. Both scenes can be rotated with an
+Arcball mouse UI.
+
+Compiling the programs:
+In each directory, open the terminal and type make to compile the respective
+program. Both directories' Makefiles create an executable file named
+glsl_renderer.
+
+Executing the programs: The usage statements for both programs are stated below.
+Also, both executable programs generated after running make in each directory
+can be run in the terminal and each will display a usage statement to show how
+the program should be run if specified with no command line arguments.
+
+Click and drag on the scene to rotate the scene using the Arcball mouse UI.
+
+Using make clean will delete the executable in the respective directory.
+
+Usage statements ($ represents terminal command line):
+part1:
+$ ./glsl_renderer
+Usage: ./glsl_renderer [scene_description_file.txt] [xres] [yres] [mode]
+
+part2:
+$ ./glsl_renderer
+Usage: ./glsl_renderer [color_texture.png] [normal_map.png]

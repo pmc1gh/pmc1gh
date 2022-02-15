@@ -1,0 +1,27 @@
+Philip Carr
+CS 171 Assignment 2
+October 26, 2018
+README
+
+Compiling the program:
+In this directory, open the terminal and type make to compile the program.
+
+Executing the programs: The usage statement for the program is stated below.
+Also, the executable program generated after running make in this directory can
+be run in the terminal and will display a usage statement to show how the
+program should be run if specified with no command line arguments.
+
+To generate all the scene images using Gouraud shading, run make g_images.
+To generate all the scene images using Phong shading, run make p_images.
+
+Using make clean will delete the executable and any .png images in the
+directory.
+
+Usage statement ($ represents terminal command line):
+$ ./shaded_renderer
+Usage: ./shaded_renderer [scene_description_file.txt] [xres] [yres] [mode]
+mode == 0 => Gouraud shading
+mode == 1 => Phong shading
+Add " | display -" after [yres] to directly display the PPM image
+Add " | convert - my_image_name.png " after [yres] to convert the PPM image into
+ a PNG image.

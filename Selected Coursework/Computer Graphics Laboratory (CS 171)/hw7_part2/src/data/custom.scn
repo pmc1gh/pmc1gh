@@ -1,0 +1,56 @@
+prm q
+exp 0.05 0.05
+prm w
+color 1 0 0
+coeff .75 .75 .75
+prm e
+color 0 1 1
+coeff .75 .75 .75
+obj a
+obj b
+obj c
+obj a
+ap q
+ss 4 4 .25
+obj b
+ap w
+xs -.5 -.5 0
+xs -.5 -.5 0
+obj c
+ap e
+xs 1 1 0
+obj a
+xs 0 0 -.125
+xs 0 0 -.125
+obj b
+xs 0 0 .375
+xs 0 0 .375
+obj c
+prm e
+exp 0.1 0.1
+obj c
+xs 0 0 .75
+obj d
+ao a
+ao b
+ao c
+prm q
+color 1 1 0
+obj d
+prm q
+color 1 1 .5
+obj d
+prm e
+coeff 1.2 1.2 1.2
+coeff 1.1 1.1 1.1
+obj d
+obj b
+obj c
+xs 0 -1 0
+obj d
+obj c
+xs -1.1 0 0
+xs .1 0 0
+rs 0 0 1 45
+xs 1 1 0
+obj d
